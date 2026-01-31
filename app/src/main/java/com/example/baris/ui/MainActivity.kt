@@ -102,30 +102,30 @@ class MainActivity : AppCompatActivity() {
     private fun updateUI(result: ScanResult) {
         binding.resultCard.visibility = View.VISIBLE
 
+        // Pagrindinis fonas dabar visada šviesus (baltas)
+        binding.resultLayout.setBackgroundColor(Color.WHITE)
+
         val isLithuania = result.countryName.contains("Lietuva", ignoreCase = true)
 
         if (isLithuania) {
             // LIETUVIŠKA PREKĖ
             binding.txtStatus.text = "PUIKU! Prekė lietuviška"
-            binding.txtStatus.textSize = 28f
+            binding.txtStatus.textSize = 30f // Labai didelis šriftas
+            binding.txtStatus.setTextColor(Color.parseColor("#2E7D32")) // Tamsiai žalia
+
             binding.txtFlag.text = "🇱🇹"
-            binding.txtFlag.textSize = 80f
+            binding.txtFlag.textSize = 90f // Didelė vėliava
         } else {
             // UŽSIENIO PREKĖ
             binding.txtStatus.text = "Kilmė: ${result.countryName}"
-            binding.txtStatus.textSize = 20f
+            binding.txtStatus.textSize = 20f // Mažesnis šriftas
+            binding.txtStatus.setTextColor(Color.BLACK)
+
             binding.txtFlag.text = getFlagEmoji(result.countryName)
-            binding.txtFlag.textSize = 40f
+            binding.txtFlag.textSize = 45f // Mažesnė vėliava
         }
 
-        // Naudojame tavo modelio kintamąjį statusText
         binding.txtCountry.text = "Barkodas: ${result.statusText}"
-
-        // Svarbu: statusColor yra Int, todėl parseColor nebereikia
-        binding.resultLayout.setBackgroundColor(result.statusColor)
-
-        // Jei nori naudoti ir tekstinę spalvą iš modelio:
-        // binding.resultCard.setCardBackgroundColor(Color.parseColor(result.backgroundColor))
     }
 
     fun getFlagEmoji(countryName: String): String {
@@ -135,6 +135,10 @@ class MainActivity : AppCompatActivity() {
             countryName.contains("Vokietija", true) -> "🇩🇪"
             countryName.contains("Latvija", true) -> "🇱🇻"
             countryName.contains("Estija", true) -> "🇪🇪"
+            countryName.contains("Ukraina", true) -> "🇺🇦"
+            countryName.contains("Italija", true) -> "🇮🇹"
+            countryName.contains("Prancūzija", true) -> "🇫🇷"
+            countryName.contains("Ispanija", true) -> "🇪🇸"
             else -> "🌍"
         }
     }

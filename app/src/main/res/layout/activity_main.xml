@@ -5,19 +5,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5"
+    android:background="#F5F7FA"
     tools:context=".ui.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.2">
+        android:layout_weight="1.3">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloseApp"
+            style="@style/Widget.MaterialComponents.Button.Icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:padding="12dp"
+            app:icon="@android:drawable/ic_menu_close_clear_cancel"
+            app:iconSize="24dp"
+            app:iconTint="#546E7A"
+            app:backgroundTint="@android:color/transparent"
+            app:rippleColor="#20000000"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cameraCard"
             android:layout_width="280dp"
             android:layout_height="280dp"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="10dp"
+            app:cardCornerRadius="32dp"
+            app:cardElevation="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,35 +52,43 @@
                 android:background="@drawable/scanner_frame" />
         </androidx.cardview.widget.CardView>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Skenuoti"
+            android:layout_width="220dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="32dp"
+            android:text="SKENUOTI"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            app:cornerRadius="35dp"
+            app:backgroundTint="#1A237E"
+            app:elevation="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/cameraCard" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/resultCard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="1.0"
         android:layout_margin="16dp"
         android:visibility="invisible"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="4dp">
+        app:cardCornerRadius="28dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFFFFF">
 
         <LinearLayout
             android:id="@+id/resultLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#FFFFFF"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="24dp">
 
             <TextView
                 android:id="@+id/txtFlag"
@@ -76,15 +101,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtCountry"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textColor="#666666"
+                android:layout_marginTop="8dp"
+                android:textColor="#757575"
                 android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnClear"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Išvalyti"
+                android:textColor="#546E7A"
+                app:rippleColor="#ECEFF1" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

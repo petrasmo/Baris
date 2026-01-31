@@ -11,6 +11,7 @@ import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.baris.databinding.ActivityMainBinding
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.viewFinder.scaleType = PreviewView.ScaleType.FILL_CENTER
+
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         viewModel.scanResult.observe(this) { result ->
@@ -46,6 +49,16 @@ class MainActivity : AppCompatActivity() {
                     this, arrayOf(Manifest.permission.CAMERA), 10
                 )
             }
+        }
+
+        binding.btnClear.setOnClickListener {
+            binding.resultCard.visibility = View.INVISIBLE
+            lastScannedCode = ""
+        }
+
+        // Programėlės uždarymo mygtukas
+        binding.btnCloseApp.setOnClickListener {
+            finishAffinity()
         }
     }
 
@@ -101,28 +114,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(result: ScanResult) {
         binding.resultCard.visibility = View.VISIBLE
-
-        // Pagrindinis fonas dabar visada šviesus (baltas)
         binding.resultLayout.setBackgroundColor(Color.WHITE)
 
         val isLithuania = result.countryName.contains("Lietuva", ignoreCase = true)
 
         if (isLithuania) {
-            // LIETUVIŠKA PREKĖ
             binding.txtStatus.text = "PUIKU! Prekė lietuviška"
-            binding.txtStatus.textSize = 30f // Labai didelis šriftas
-            binding.txtStatus.setTextColor(Color.parseColor("#2E7D32")) // Tamsiai žalia
-
+            binding.txtStatus.textSize = 30f
+            binding.txtStatus.setTextColor(Color.parseColor("#2E7D32"))
             binding.txtFlag.text = "🇱🇹"
-            binding.txtFlag.textSize = 90f // Didelė vėliava
+            binding.txtFlag.textSize = 90f
         } else {
-            // UŽSIENIO PREKĖ
             binding.txtStatus.text = "Kilmė: ${result.countryName}"
-            binding.txtStatus.textSize = 20f // Mažesnis šriftas
+            binding.txtStatus.textSize = 20f
             binding.txtStatus.setTextColor(Color.BLACK)
-
             binding.txtFlag.text = getFlagEmoji(result.countryName)
-            binding.txtFlag.textSize = 45f // Mažesnė vėliava
+            binding.txtFlag.textSize = 45f
         }
 
         binding.txtCountry.text = "Barkodas: ${result.statusText}"
@@ -136,9 +143,6 @@ class MainActivity : AppCompatActivity() {
             countryName.contains("Latvija", true) -> "🇱🇻"
             countryName.contains("Estija", true) -> "🇪🇪"
             countryName.contains("Ukraina", true) -> "🇺🇦"
-            countryName.contains("Italija", true) -> "🇮🇹"
-            countryName.contains("Prancūzija", true) -> "🇫🇷"
-            countryName.contains("Ispanija", true) -> "🇪🇸"
             else -> "🌍"
         }
     }

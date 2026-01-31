@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.viewFinder.scaleType = PreviewView.ScaleType.FILL_CENTER
-
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         viewModel.scanResult.observe(this) { result ->
@@ -56,7 +55,6 @@ class MainActivity : AppCompatActivity() {
             lastScannedCode = ""
         }
 
-        // Programėlės uždarymo mygtukas
         binding.btnCloseApp.setOnClickListener {
             finishAffinity()
         }
@@ -114,25 +112,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(result: ScanResult) {
         binding.resultCard.visibility = View.VISIBLE
-        binding.resultLayout.setBackgroundColor(Color.WHITE)
+        binding.resultLayout.setBackgroundColor(Color.parseColor(result.backgroundColor))
 
-        val isLithuania = result.countryName.contains("Lietuva", ignoreCase = true)
+        // 1. Kilmė (Viršuje, stambi, spalvota)
+        binding.txtCountry.text = "Kilmė: ${result.countryName}"
+        binding.txtCountry.setTextColor(result.statusColor)
 
-        if (isLithuania) {
-            binding.txtStatus.text = "PUIKU! Prekė lietuviška"
-            binding.txtStatus.textSize = 30f
-            binding.txtStatus.setTextColor(Color.parseColor("#2E7D32"))
-            binding.txtFlag.text = "🇱🇹"
-            binding.txtFlag.textSize = 90f
-        } else {
-            binding.txtStatus.text = "Kilmė: ${result.countryName}"
-            binding.txtStatus.textSize = 20f
-            binding.txtStatus.setTextColor(Color.BLACK)
-            binding.txtFlag.text = getFlagEmoji(result.countryName)
-            binding.txtFlag.textSize = 45f
-        }
+        // 2. Vėliava
+        binding.txtFlag.text = getFlagEmoji(result.countryName)
 
-        binding.txtCountry.text = "Barkodas: ${result.statusText}"
+        // 3. Aprašymas (Juodas, šiek tiek mažesnis)
+        binding.txtStatus.text = result.statusText
+        binding.txtStatus.setTextColor(Color.BLACK)
+        binding.txtStatus.textSize = 15f
     }
 
     fun getFlagEmoji(countryName: String): String {

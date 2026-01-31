@@ -49,6 +49,7 @@ dependencies {
 
     // ML Kit Barcode Scanning
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
 
     // CameraX bibliotekos
     val cameraxVersion = "1.3.0"

@@ -4,12 +4,18 @@ import android.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.baris.ui.model.ScanResult
 import com.example.baris.util.BarcodeHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 class ScanViewModel : ViewModel() {
 
-    // Tai yra „stebimas“ objektas. MainActivity jį stebės ir atnaujins vaizdą.
     private val _scanResult = MutableLiveData<ScanResult>()
     val scanResult: LiveData<ScanResult> = _scanResult
 
@@ -17,24 +23,66 @@ class ScanViewModel : ViewModel() {
         val country = BarcodeHelper.getCountryData(barcode)
         val isLt = BarcodeHelper.isLithuanian(barcode)
 
-        val result = if (isLt) {
-            ScanResult(
-                countryName = "$country ($barcode)",
-                statusText = "Valio! Tai lietuviška prekė 🇱🇹",
-                statusColor = Color.parseColor("#2E7D32"), // holo_green_dark
-                backgroundColor = "#E8F5E9"
-            )
-        } else {
-            ScanResult(
-                countryName = "$country ($barcode)",
-                statusText = "Prekė nėra lietuviška",
-                statusColor = Color.parseColor("#C62828"), // holo_red_dark
-                backgroundColor = "#F5F5F5"
-            )
-        }
+        val baseStatusText = if (isLt) "Tikrinama lietuviška prekė..." else "Tikrinama užsienio prekė..."
+        val baseColor = if (isLt) Color.parseColor("#2E7D32") else Color.parseColor("#C62828")
+        val baseBg = if (isLt) "#E8F5E9" else "#F5F5F5"
 
-        _scanResult.value = result
+        _scanResult.value = ScanResult(country, baseStatusText, baseColor, baseBg)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val details = fetchProductDetails(barcode)
+
+            withContext(Dispatchers.Main) {
+                val finalStatusText = if (isLt) {
+                    "Valio! Tai lietuviška prekė 🇱🇹\n\n$details"
+                } else {
+                    "Prekė nėra lietuviška\n\n$details"
+                }
+
+                _scanResult.value = ScanResult(
+                    countryName = "$country ($barcode)",
+                    statusText = finalStatusText,
+                    statusColor = baseColor,
+                    backgroundColor = baseBg
+                )
+            }
+        }
     }
 
+    private fun fetchProductDetails(barcode: String): String {
+        return try {
+            val url = URL("https://world.openfoodfacts.org/api/v0/product/$barcode.json")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
 
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(response)
+
+            if (json.has("status") && json.getInt("status") == 1) {
+                val product = json.getJSONObject("product")
+
+                val name = product.optString("product_name_lt").ifEmpty {
+                    product.optString("product_name", "Pavadinimas nerastas")
+                }
+                val brand = product.optString("brands", "Gamintojas nežinomas")
+                val quantity = product.optString("quantity", "")
+                val ingredients = product.optString("ingredients_text_lt").ifEmpty {
+                    product.optString("ingredients_text", "")
+                }
+
+                val sb = StringBuilder()
+                sb.append("📦 $name\n")
+                sb.append("🏭 $brand\n")
+                if (quantity.isNotEmpty()) sb.append("⚖️ Kiekis: $quantity\n")
+                if (ingredients.isNotEmpty()) sb.append("\n🌿 Sudėtis: $ingredients")
+
+                sb.toString()
+            } else {
+                "Prekės aprašymas nerastas duomenų bazėje."
+            }
+        } catch (e: Exception) {
+            "Nepavyko gauti informacijos: ${e.message}"
+        }
+    }
 }

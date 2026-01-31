@@ -101,10 +101,42 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(result: ScanResult) {
         binding.resultCard.visibility = View.VISIBLE
-        binding.txtCountry.text = result.countryName
-        binding.txtStatus.text = result.statusText
-        binding.txtStatus.setTextColor(result.statusColor)
-        binding.resultLayout.setBackgroundColor(Color.parseColor(result.backgroundColor))
+
+        val isLithuania = result.countryName.contains("Lietuva", ignoreCase = true)
+
+        if (isLithuania) {
+            // LIETUVIŠKA PREKĖ
+            binding.txtStatus.text = "PUIKU! Prekė lietuviška"
+            binding.txtStatus.textSize = 28f
+            binding.txtFlag.text = "🇱🇹"
+            binding.txtFlag.textSize = 80f
+        } else {
+            // UŽSIENIO PREKĖ
+            binding.txtStatus.text = "Kilmė: ${result.countryName}"
+            binding.txtStatus.textSize = 20f
+            binding.txtFlag.text = getFlagEmoji(result.countryName)
+            binding.txtFlag.textSize = 40f
+        }
+
+        // Naudojame tavo modelio kintamąjį statusText
+        binding.txtCountry.text = "Barkodas: ${result.statusText}"
+
+        // Svarbu: statusColor yra Int, todėl parseColor nebereikia
+        binding.resultLayout.setBackgroundColor(result.statusColor)
+
+        // Jei nori naudoti ir tekstinę spalvą iš modelio:
+        // binding.resultCard.setCardBackgroundColor(Color.parseColor(result.backgroundColor))
+    }
+
+    fun getFlagEmoji(countryName: String): String {
+        return when {
+            countryName.contains("Lietuva", true) -> "🇱🇹"
+            countryName.contains("Lenkija", true) -> "🇵🇱"
+            countryName.contains("Vokietija", true) -> "🇩🇪"
+            countryName.contains("Latvija", true) -> "🇱🇻"
+            countryName.contains("Estija", true) -> "🇪🇪"
+            else -> "🌍"
+        }
     }
 
     private fun allPermissionsGranted() = arrayOf(Manifest.permission.CAMERA).all {

@@ -1,19 +1,16 @@
 package com.example.baris.ui
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.baris.R
@@ -37,50 +34,96 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.statusBarColor = Color.parseColor("#1A237E")
-
-        binding.viewFinder.scaleType = PreviewView.ScaleType.FILL_CENTER
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Vizualus pataisymas: nustatome mygtuko vėliavą pagal esamą kalbą
+        // Nustatome kalbos mygtuko tekstą/vėliavėlę
         val currentLang = resources.configuration.locales[0].language
         binding.btnChangeLanguage.text = if (currentLang == "en") "🇬🇧" else "🇱🇹"
 
-        viewModel.scanResult.observe(this) { result ->
-            updateUI(result)
-        }
+        viewModel.scanResult.observe(this) { updateUI(it) }
 
         binding.btnScan.setOnClickListener {
-            if (allPermissionsGranted()) {
-                startCamera()
-            } else {
-                ActivityCompat.requestPermissions(
-                    this, arrayOf(Manifest.permission.CAMERA), 10
-                )
-            }
+            if (allPermissionsGranted()) startCamera()
+            else ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 10)
         }
 
-        binding.btnChangeLanguage.setOnClickListener {
-            showLanguageDialog()
-        }
+        binding.btnChangeLanguage.setOnClickListener { showLanguageDialog() }
 
         binding.btnClear.setOnClickListener {
             binding.resultCard.visibility = View.INVISIBLE
             lastScannedCode = ""
         }
 
-        binding.btnCloseApp.setOnClickListener {
-            finishAffinity()
+        binding.btnCloseApp.setOnClickListener { finishAffinity() }
+    }
+
+    private fun updateUI(result: ScanResult) {
+        binding.resultCard.visibility = View.VISIBLE
+
+        // Spalvų nustatymas
+        val baseColor = if (result.isLt) Color.parseColor("#2E7D32") else Color.parseColor("#C62828")
+        val bgColor = if (result.isLt) "#E8F5E9" else "#F5F5F5"
+        binding.resultLayout.setBackgroundColor(Color.parseColor(bgColor))
+
+        // Kilmės vertimas: naudojame getString su resursų ID iš ViewModel
+        val countryName = if (result.countryResId != 0) getString(result.countryResId) else ""
+        val flag = getFlagEmoji(result.countryResId)
+
+        binding.txtCountry.text = "${getString(R.string.origin)}: $countryName $flag"
+        binding.txtCountry.setTextColor(baseColor)
+
+        if (result.isNotFound) {
+            binding.txtStatus.text = getString(R.string.not_found)
+        } else if (result.error != null) {
+            binding.txtStatus.text = "Error: ${result.error}"
+        } else {
+            val statusTitle = if (result.isLt) getString(R.string.status_lithuanian) else getString(R.string.status_foreign)
+            val qty = if (result.quantity.isNotEmpty()) " (${result.quantity})" else ""
+
+            // Formuojame pilną informaciją
+            binding.txtStatus.text = """
+                $statusTitle
+                
+                📦 ${result.productName}$qty
+                🏭 ${getString(R.string.label_brand)}: ${result.brand}
+                🥗 ${getString(R.string.label_nutriscore)}: ${result.nutriScore}
+                ⚠️ ${getString(R.string.label_allergens)}: ${result.allergens.ifEmpty { "---" }}
+                🧪 ${getString(R.string.label_additives)}: ${result.additives.ifEmpty { "---" }}
+                
+                🌿 ${getString(R.string.label_ingredients)}:
+                ${result.ingredients.ifEmpty { "---" }}
+            """.trimIndent()
+        }
+        binding.txtStatus.setTextColor(Color.BLACK)
+    }
+
+    private fun getFlagEmoji(resId: Int): String {
+        return when (resId) {
+            R.string.country_lithuania -> "🇱🇹"
+            R.string.country_usa_canada -> "🇺🇸🇨🇦"
+            R.string.country_france -> "🇫🇷"
+            R.string.country_germany -> "🇩🇪"
+            R.string.country_poland -> "🇵🇱"
+            R.string.country_latvia -> "🇱🇻"
+            R.string.country_estonia -> "🇪🇪"
+            R.string.country_ukraine -> "🇺🇦"
+            R.string.country_russia -> "🇷🇺"
+            R.string.country_japan -> "🇯🇵"
+            R.string.country_uk -> "🇬🇧"
+            R.string.country_italy -> "🇮🇹"
+            R.string.country_spain -> "🇪🇸"
+            R.string.country_china -> "🇨🇳"
+            R.string.country_belarus -> "🇧🇾"
+            R.string.country_finland -> "🇫🇮"
+            R.string.country_norway -> "🇳🇴"
+            R.string.country_sweden -> "🇸🇪"
+            else -> "🌍"
         }
     }
 
     private fun showLanguageDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_language, null)
-        val builder = AlertDialog.Builder(this)
-        builder.setView(dialogView)
-
-        val dialog = builder.create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
         dialogView.findViewById<View>(R.id.lnLithuanian).setOnClickListener {
             setLocale("lt")
@@ -95,92 +138,60 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun setLocale(langCode: String) {
-        val locale = Locale(langCode)
+    private fun setLocale(lang: String) {
+        val locale = Locale(lang)
         Locale.setDefault(locale)
         val config = resources.configuration
         config.setLocale(locale)
-        baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
+
+        // Atnaujiname resursus, kad getString() veiktų su nauja kalba
+        resources.updateConfiguration(config, resources.displayMetrics)
+
+        // Perkrauname Activity, kad pasikeitimas įsigaliotų
         recreate()
     }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            val cameraProvider = cameraProviderFuture.get()
+
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             }
+
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also {
+                .build().also {
                     it.setAnalyzer(cameraExecutor) { imageProxy ->
-                        processImageProxy(imageProxy)
-                    }
-                }
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
-            } catch (exc: Exception) {
-                Toast.makeText(this, "Camera error", Toast.LENGTH_SHORT).show()
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    @OptIn(ExperimentalGetImage::class)
-    private fun processImageProxy(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image
-        if (mediaImage != null) {
-            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            val scanner = BarcodeScanning.getClient()
-            scanner.process(image)
-                .addOnSuccessListener { barcodes ->
-                    for (barcode in barcodes) {
-                        val code = barcode.rawValue ?: ""
-                        if (code.isNotEmpty()) {
-                            runOnUiThread { viewResult(code) }
+                        val mediaImage = imageProxy.image
+                        if (mediaImage != null) {
+                            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                            BarcodeScanning.getClient().process(image).addOnSuccessListener { barcodes ->
+                                barcodes.firstOrNull()?.rawValue?.let { code ->
+                                    if (code != lastScannedCode) {
+                                        lastScannedCode = code
+                                        runOnUiThread { viewModel.processBarcode(code) }
+                                    }
+                                }
+                            }.addOnCompleteListener { imageProxy.close() }
                         }
                     }
                 }
-                .addOnCompleteListener { imageProxy.close() }
-        }
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalyzer)
+            } catch (exc: Exception) {
+                Toast.makeText(this, "Camera error", Toast.LENGTH_SHORT).show()
+            }
+
+        }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun viewResult(barcode: String) {
-        if (barcode == lastScannedCode) return
-        lastScannedCode = barcode
-        viewModel.processBarcode(barcode)
-    }
-
-    private fun updateUI(result: ScanResult) {
-        binding.resultCard.visibility = View.VISIBLE
-        binding.resultLayout.setBackgroundColor(Color.parseColor(result.backgroundColor))
-
-        val originLabel = getString(R.string.origin)
-        binding.txtCountry.text = "$originLabel: ${result.countryName}"
-        binding.txtCountry.setTextColor(result.statusColor)
-
-        binding.txtFlag.text = getFlagEmoji(result.countryName)
-
-        binding.txtStatus.text = result.statusText
-        binding.txtStatus.setTextColor(Color.BLACK)
-        binding.txtStatus.textSize = 15f
-    }
-
-    private fun getFlagEmoji(countryName: String): String {
-        return when {
-            countryName.contains("Lietuva", true) || countryName.contains("Lithuania", true) -> "🇱🇹"
-            countryName.contains("Lenkija", true) || countryName.contains("Poland", true) -> "🇵🇱"
-            countryName.contains("Vokietija", true) || countryName.contains("Germany", true) -> "🇩🇪"
-            else -> "🌍"
-        }
-    }
-
-    private fun allPermissionsGranted() = arrayOf(Manifest.permission.CAMERA).all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
+    private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(
+        this, Manifest.permission.CAMERA
+    ) == PackageManager.PERMISSION_GRANTED
 
     override fun onDestroy() {
         super.onDestroy()

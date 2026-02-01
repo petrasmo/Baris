@@ -61,23 +61,11 @@ class ScanViewModel : ViewModel() {
 
             if (json.has("status") && json.getInt("status") == 1) {
                 val product = json.getJSONObject("product")
-
                 val name = product.optString("product_name_lt").ifEmpty {
                     product.optString("product_name", "Pavadinimas nerastas")
                 }
                 val brand = product.optString("brands", "Gamintojas nežinomas")
-                val quantity = product.optString("quantity", "")
-                val ingredients = product.optString("ingredients_text_lt").ifEmpty {
-                    product.optString("ingredients_text", "")
-                }
-
-                val sb = StringBuilder()
-                sb.append("📦 $name\n")
-                sb.append("🏭 $brand\n")
-                if (quantity.isNotEmpty()) sb.append("⚖️ Kiekis: $quantity\n")
-                if (ingredients.isNotEmpty()) sb.append("\n🌿 Sudėtis: $ingredients")
-
-                sb.toString()
+                "📦 $name\n🏭 $brand"
             } else {
                 "Prekės aprašymas nerastas duomenų bazėje."
             }

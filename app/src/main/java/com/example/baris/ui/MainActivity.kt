@@ -37,13 +37,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Sutvarkome viršutinę juostą (status bar), kad nesimatytų "kiaurai"
         window.statusBarColor = Color.parseColor("#1A237E")
 
         binding.viewFinder.scaleType = PreviewView.ScaleType.FILL_CENTER
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Nustatome vėliavą ant mygtuko pagal tai, kokia kalba dabar nustatyta
+        // Vizualus pataisymas: nustatome mygtuko vėliavą pagal esamą kalbą
         val currentLang = resources.configuration.locales[0].language
         binding.btnChangeLanguage.text = if (currentLang == "en") "🇬🇧" else "🇱🇹"
 
@@ -51,7 +50,6 @@ class MainActivity : AppCompatActivity() {
             updateUI(result)
         }
 
-        // Skenavimo mygtukas
         binding.btnScan.setOnClickListener {
             if (allPermissionsGranted()) {
                 startCamera()
@@ -62,7 +60,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Kalbos keitimo mygtukas
         binding.btnChangeLanguage.setOnClickListener {
             showLanguageDialog()
         }
@@ -76,8 +73,6 @@ class MainActivity : AppCompatActivity() {
             finishAffinity()
         }
     }
-
-    // --- KALBOS KEITIMO LOGIKA ---
 
     private fun showLanguageDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_language, null)
@@ -105,14 +100,9 @@ class MainActivity : AppCompatActivity() {
         Locale.setDefault(locale)
         val config = resources.configuration
         config.setLocale(locale)
-
         baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
-
-        // Perkrauname Activity, kad pasikeistų visi tekstai ir vėliava
         recreate()
     }
-
-    // --- KAMEROS IR SKENAVIMO LOGIKA ---
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)

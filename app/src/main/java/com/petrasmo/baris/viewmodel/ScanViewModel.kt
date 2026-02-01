@@ -1,11 +1,11 @@
-package com.example.baris.viewmodel
+package com.petrasmo.baris.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.baris.ui.model.ScanResult
-import com.example.baris.util.BarcodeHelper
+import com.petrasmo.baris.ui.model.ScanResult
+import com.petrasmo.baris.util.BarcodeHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

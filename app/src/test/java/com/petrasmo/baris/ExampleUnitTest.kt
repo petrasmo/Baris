@@ -1,4 +1,4 @@
-package com.example.baris
+package com.petrasmo.baris
 
 import org.junit.Test
 

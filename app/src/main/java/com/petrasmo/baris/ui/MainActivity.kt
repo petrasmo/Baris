@@ -1,4 +1,4 @@
-package com.example.baris.ui
+package com.petrasmo.baris.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -13,15 +13,15 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.baris.R
-import com.example.baris.databinding.ActivityMainBinding
-import com.example.baris.ui.model.ScanResult
-import com.example.baris.viewmodel.ScanViewModel
+import com.petrasmo.baris.databinding.ActivityMainBinding
+import com.petrasmo.baris.ui.model.ScanResult
+import com.petrasmo.baris.viewmodel.ScanViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.petrasmo.baris.R
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -65,11 +65,12 @@ class MainActivity : AppCompatActivity() {
         val bgColor = if (result.isLt) "#E8F5E9" else "#F5F5F5"
         binding.resultLayout.setBackgroundColor(Color.parseColor(bgColor))
 
-        // Kilmės vertimas: naudojame getString su resursų ID iš ViewModel
+        // Kilmės vertimas: naudojame getString su resursų ID
         val countryName = if (result.countryResId != 0) getString(result.countryResId) else ""
         val flag = getFlagEmoji(result.countryResId)
 
-        binding.txtCountry.text = "${getString(R.string.origin)}: $countryName $flag"
+        // PATAISYTA EILUTĖ: Pridėtas barkodas skliausteliuose
+        binding.txtCountry.text = "${getString(R.string.origin)}: $countryName $flag (${result.barcode})"
         binding.txtCountry.setTextColor(baseColor)
 
         if (result.isNotFound) {
@@ -117,6 +118,10 @@ class MainActivity : AppCompatActivity() {
             R.string.country_finland -> "🇫🇮"
             R.string.country_norway -> "🇳🇴"
             R.string.country_sweden -> "🇸🇪"
+            R.string.country_bulgaria -> "🇧🇬"
+            R.string.country_slovenia -> "🇸🇮"
+            R.string.country_croatia -> "🇭🇷"
+            R.string.country_saudi_arabia -> "🇸🇦"
             else -> "🌍"
         }
     }
@@ -144,10 +149,7 @@ class MainActivity : AppCompatActivity() {
         val config = resources.configuration
         config.setLocale(locale)
 
-        // Atnaujiname resursus, kad getString() veiktų su nauja kalba
         resources.updateConfiguration(config, resources.displayMetrics)
-
-        // Perkrauname Activity, kad pasikeitimas įsigaliotų
         recreate()
     }
 

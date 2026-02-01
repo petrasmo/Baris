@@ -1,6 +1,6 @@
-package com.example.baris.util
+package com.petrasmo.baris.util
 
-import com.example.baris.R
+import com.petrasmo.baris.R
 
 object BarcodeHelper {
     fun getCountryResId(barcode: String): Int {

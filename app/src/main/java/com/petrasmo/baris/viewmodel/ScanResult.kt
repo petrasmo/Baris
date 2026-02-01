@@ -1,4 +1,4 @@
-package com.example.baris.ui.model
+package com.petrasmo.baris.ui.model
 
 /**
  * Modelis, saugantis nuskaitytos prekės duomenis.

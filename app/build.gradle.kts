@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.baris"
+    namespace = "com.petrasmo.baris"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.baris"
+        applicationId = "com.petrasmo.baris"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -20,7 +20,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -61,11 +61,54 @@ class ScanViewModel : ViewModel() {
 
             if (json.has("status") && json.getInt("status") == 1) {
                 val product = json.getJSONObject("product")
+
+                // 1. Pavadinimas
                 val name = product.optString("product_name_lt").ifEmpty {
                     product.optString("product_name", "Pavadinimas nerastas")
                 }
+
+                // 2. Gamintojas
                 val brand = product.optString("brands", "Gamintojas nežinomas")
-                "📦 $name\n🏭 $brand"
+
+                // 3. Kiekis
+                val quantity = product.optString("quantity", "")
+
+                // 4. Nutri-Score (A-E reitingas)
+                val nutriScore = product.optString("nutriscore_grade", "Nenurodyta").uppercase()
+
+                // 5. Alergenai (išvalome nereikalingus priedus 'en:' arba 'lt:')
+                var allergens = product.optString("allergens_from_ingredients", "Nenurodyta")
+                    .replace("en:", "")
+                    .replace("lt:", "")
+                    .replace(",", ", ")
+
+                if (allergens.isEmpty()) allergens = "Nenurodyta"
+
+                // 6. E-priedai (Priedai prie maisto)
+                var additives = product.optString("additives_tags", "Nėra")
+                    .replace("en:", "")
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace(",", ", ")
+                    .uppercase()
+
+                if (additives.isEmpty()) additives = "Nėra"
+
+                // 7. Sudėtis
+                val ingredients = product.optString("ingredients_text_lt").ifEmpty {
+                    product.optString("ingredients_text", "Sudėtis nepateikta")
+                }
+
+                // Rezultato formavimas
+                val quantityText = if (quantity.isNotEmpty()) " ($quantity)" else ""
+
+                "📦 $name$quantityText\n" +
+                        "🏭 Gamintojas: $brand\n" +
+                        "🥗 Nutri-Score: $nutriScore\n" +
+                        "⚠️ Alergenai: $allergens\n" +
+                        "🧪 Priedai: $additives\n\n" +
+                        "🌿 Sudėtis:\n$ingredients"
+
             } else {
                 "Prekės aprašymas nerastas duomenų bazėje."
             }

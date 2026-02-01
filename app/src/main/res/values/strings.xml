@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Baris</string>
+    <string name="scan_instruction">Skenuokite prekės barkodą</string>
+    <string name="btn_scan">SKENUOTI</string>
+    <string name="btn_clear">Išvalyti</string>
+    <string name="origin">Kilmė</string>
+    <string name="skenuoti_prekes_barkoda">Skenuokite prekės barkodą</string>
 </resources>

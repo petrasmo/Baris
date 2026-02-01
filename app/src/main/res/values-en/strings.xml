@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Baris</string>
+    <string name="scan_instruction">Scan the product barcode</string>
+    <string name="btn_scan">SCAN</string>
+    <string name="btn_clear">Clear</string>
+    <string name="origin">Origin</string>
+    <string name="skenuoti_prekes_barkoda">Scan the product barcode</string>
+</resources>

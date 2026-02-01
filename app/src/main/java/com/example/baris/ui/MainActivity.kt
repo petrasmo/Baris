@@ -1,6 +1,7 @@
 package com.example.baris.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
@@ -8,17 +9,20 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.baris.R
 import com.example.baris.databinding.ActivityMainBinding
 import com.example.baris.ui.model.ScanResult
 import com.example.baris.viewmodel.ScanViewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -33,13 +37,21 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Sutvarkome viršutinę juostą (status bar), kad nesimatytų "kiaurai"
+        window.statusBarColor = Color.parseColor("#1A237E")
+
         binding.viewFinder.scaleType = PreviewView.ScaleType.FILL_CENTER
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        // Nustatome vėliavą ant mygtuko pagal tai, kokia kalba dabar nustatyta
+        val currentLang = resources.configuration.locales[0].language
+        binding.btnChangeLanguage.text = if (currentLang == "en") "🇬🇧" else "🇱🇹"
 
         viewModel.scanResult.observe(this) { result ->
             updateUI(result)
         }
 
+        // Skenavimo mygtukas
         binding.btnScan.setOnClickListener {
             if (allPermissionsGranted()) {
                 startCamera()
@@ -48,6 +60,11 @@ class MainActivity : AppCompatActivity() {
                     this, arrayOf(Manifest.permission.CAMERA), 10
                 )
             }
+        }
+
+        // Kalbos keitimo mygtukas
+        binding.btnChangeLanguage.setOnClickListener {
+            showLanguageDialog()
         }
 
         binding.btnClear.setOnClickListener {
@@ -59,6 +76,43 @@ class MainActivity : AppCompatActivity() {
             finishAffinity()
         }
     }
+
+    // --- KALBOS KEITIMO LOGIKA ---
+
+    private fun showLanguageDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_language, null)
+        val builder = AlertDialog.Builder(this)
+        builder.setView(dialogView)
+
+        val dialog = builder.create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        dialogView.findViewById<View>(R.id.lnLithuanian).setOnClickListener {
+            setLocale("lt")
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.lnEnglish).setOnClickListener {
+            setLocale("en")
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun setLocale(langCode: String) {
+        val locale = Locale(langCode)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+
+        baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
+
+        // Perkrauname Activity, kad pasikeistų visi tekstai ir vėliava
+        recreate()
+    }
+
+    // --- KAMEROS IR SKENAVIMO LOGIKA ---
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -80,7 +134,7 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
             } catch (exc: Exception) {
-                Toast.makeText(this, "Klaida paleidžiant kamerą", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Camera error", Toast.LENGTH_SHORT).show()
             }
         }, ContextCompat.getMainExecutor(this))
     }
@@ -114,27 +168,22 @@ class MainActivity : AppCompatActivity() {
         binding.resultCard.visibility = View.VISIBLE
         binding.resultLayout.setBackgroundColor(Color.parseColor(result.backgroundColor))
 
-        // 1. Kilmė (Viršuje, stambi, spalvota)
-        binding.txtCountry.text = "Kilmė: ${result.countryName}"
+        val originLabel = getString(R.string.origin)
+        binding.txtCountry.text = "$originLabel: ${result.countryName}"
         binding.txtCountry.setTextColor(result.statusColor)
 
-        // 2. Vėliava
         binding.txtFlag.text = getFlagEmoji(result.countryName)
 
-        // 3. Aprašymas (Juodas, šiek tiek mažesnis)
         binding.txtStatus.text = result.statusText
         binding.txtStatus.setTextColor(Color.BLACK)
         binding.txtStatus.textSize = 15f
     }
 
-    fun getFlagEmoji(countryName: String): String {
+    private fun getFlagEmoji(countryName: String): String {
         return when {
-            countryName.contains("Lietuva", true) -> "🇱🇹"
-            countryName.contains("Lenkija", true) -> "🇵🇱"
-            countryName.contains("Vokietija", true) -> "🇩🇪"
-            countryName.contains("Latvija", true) -> "🇱🇻"
-            countryName.contains("Estija", true) -> "🇪🇪"
-            countryName.contains("Ukraina", true) -> "🇺🇦"
+            countryName.contains("Lietuva", true) || countryName.contains("Lithuania", true) -> "🇱🇹"
+            countryName.contains("Lenkija", true) || countryName.contains("Poland", true) -> "🇵🇱"
+            countryName.contains("Vokietija", true) || countryName.contains("Germany", true) -> "🇩🇪"
             else -> "🌍"
         }
     }
